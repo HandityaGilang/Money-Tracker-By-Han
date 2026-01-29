@@ -1,0 +1,26 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # Jalan setiap hari jam 8 pagi UTC (sekitar jam 3 sore WIB)
+  workflow_dispatch: # Supaya bisa dijalankan manual
+
+jobs:
+  ping_database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "Error: Secrets SUPABASE_URL and SUPABASE_ANON_KEY must be set in GitHub Repository Settings."
+            exit 1
+          fi
+          
+          # Melakukan request sederhana ke tabel profiles (cuma ambil 1 baris)
+          # Ini dianggap sebagai aktivitas API oleh Supabase
+          curl -f -X GET "$SUPABASE_URL/rest/v1/profiles?select=id&limit=1" \
+          -H "apikey: $SUPABASE_KEY" \
+          -H "Authorization: Bearer $SUPABASE_KEY"
